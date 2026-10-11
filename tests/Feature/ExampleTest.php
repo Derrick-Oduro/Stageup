@@ -1,7 +1,9 @@
 <?php
 
-it('returns a successful response', function () {
+it('loads the Game Street community home page', function () {
     $response = $this->get('/');
 
-    $response->assertRedirect(route('tournaments.index'));
+    $response->assertOk()
+        ->assertSee('Game Street')
+        ->assertSee('Community');
 });

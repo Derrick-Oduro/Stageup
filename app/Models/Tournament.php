@@ -9,11 +9,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tournament extends Model
 {
     /** @use HasFactory<TournamentFactory> */
     use HasFactory;
+
+    public const STATUS_TRANSITIONS = [
+        'draft' => ['registration_open', 'cancelled'],
+        'upcoming' => ['registration_open', 'cancelled'],
+        'registration_open' => ['registration_closed', 'cancelled'],
+        'registration_closed' => ['scheduled', 'cancelled'],
+        'scheduled' => ['in_progress', 'cancelled'],
+        'in_progress' => ['completed', 'cancelled'],
+        'completed' => [],
+        'cancelled' => [],
+    ];
 
     /**
      * @var array<int, string>
@@ -32,6 +44,7 @@ class Tournament extends Model
         'followers_count',
         'is_public',
         'rules',
+        'format_config',
     ];
 
     /**
@@ -43,6 +56,7 @@ class Tournament extends Model
             'registration_deadline' => 'datetime',
             'starts_at' => 'datetime',
             'is_public' => 'boolean',
+            'format_config' => 'array',
         ];
     }
 
@@ -101,5 +115,36 @@ class Tournament extends Model
     public function participants(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'tournament_participants')->withTimestamps();
+    }
+
+    public function canTransitionTo(string $status): bool
+    {
+        $allowedTransitions = self::STATUS_TRANSITIONS[$this->status] ?? [];
+
+        return in_array($status, $allowedTransitions, true);
+    }
+
+    public function transitionTo(string $status): self
+    {
+        if (! $this->canTransitionTo($status)) {
+            throw new \InvalidArgumentException(sprintf(
+                'Tournament status cannot transition from "%s" to "%s".',
+                $this->status,
+                $status,
+            ));
+        }
+
+        $this->status = $status;
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * @return HasMany<Fixture, $this>
+     */
+    public function fixtures(): HasMany
+    {
+        return $this->hasMany(Fixture::class);
     }
 }

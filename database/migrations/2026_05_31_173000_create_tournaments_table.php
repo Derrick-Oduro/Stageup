@@ -24,8 +24,11 @@ return new class extends Migration {
                 'group_knockout',
             ]);
             $table->enum('status', [
+                'draft',
                 'upcoming',
                 'registration_open',
+                'registration_closed',
+                'scheduled',
                 'in_progress',
                 'completed',
                 'cancelled',

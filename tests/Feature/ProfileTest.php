@@ -50,6 +50,28 @@ test('email verification status is unchanged when the email address is unchanged
     $this->assertNotNull($user->refresh()->email_verified_at);
 });
 
+test('user has a profile record with public profile fields', function () {
+    $user = User::factory()->create();
+
+    $user->profile()->updateOrCreate(
+        ['user_id' => $user->id],
+        [
+            'display_name' => 'Hero Gamer',
+            'bio' => 'Competitive eFootball player and organizer.',
+            'timezone' => 'UTC',
+            'is_public' => true,
+        ],
+    );
+
+    $user->refresh();
+
+    expect($user->profile)->not->toBeNull()
+        ->and($user->profile->display_name)->toBe('Hero Gamer')
+        ->and($user->profile->bio)->toBe('Competitive eFootball player and organizer.')
+        ->and($user->profile->timezone)->toBe('UTC')
+        ->and($user->profile->is_public)->toBeTrue();
+});
+
 test('user can delete their account', function () {
     $user = User::factory()->create();
 

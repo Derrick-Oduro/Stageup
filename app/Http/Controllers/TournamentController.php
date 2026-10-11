@@ -66,7 +66,12 @@ class TournamentController extends Controller
     {
         abort_unless($tournament->is_public, 404);
 
-        $tournament->load('organizer:id,name')->loadCount([
+        $tournament->load([
+            'organizer:id,name',
+            'fixtures' => fn ($query) => $query
+                ->with(['participants', 'officialResult.winner', 'officialResult.loser'])
+                ->orderBy('scheduled_at'),
+        ])->loadCount([
             'followers as real_followers_count',
             'participants as real_participants_count',
         ]);

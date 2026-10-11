@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -39,6 +40,35 @@ class User extends Authenticatable
     public function tournaments(): HasMany
     {
         return $this->hasMany(Tournament::class, 'organizer_id');
+    }
+
+    /**
+     * @return HasMany<ScoreSubmission, $this>
+     */
+    public function scoreSubmissions(): HasMany
+    {
+        return $this->hasMany(ScoreSubmission::class, 'submitted_by_user_id');
+    }
+
+    /**
+     * @return HasMany<OfficialResult, $this>
+     */
+    public function approvedResults(): HasMany
+    {
+        return $this->hasMany(OfficialResult::class, 'approved_by_user_id');
+    }
+
+    /**
+     * @return HasOne<Profile, $this>
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
     }
 
     /**
